@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PushTime - Integration Guide</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #0f172a;
+        }
+
+        .glass-panel {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body class="bg-slate-900 text-slate-200 antialiased">
+    <div class="min-h-screen py-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+
+            <!-- Header -->
+            <div class="text-center mb-16">
+                <a href="/" class="inline-flex items-center gap-2 text-indigo-400 hover:text-indigo-300 mb-6">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                    </svg>
+                    Back to Home
+                </a>
+                <h1 class="text-4xl font-bold text-white mb-4">Integration Guide</h1>
+                <p class="text-slate-400 text-lg">Learn how to integrate PushTime into your website</p>
+            </div>
+
+            <!-- Quick Start Card -->
+            <div class="glass-panel rounded-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Quick Start</h2>
+                <div class="space-y-4 text-slate-300">
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="flex-shrink-0 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            1</div>
+                        <div>
+                            <h3 class="font-semibold text-white">Get Your API Key</h3>
+                            <p class="text-sm text-slate-400">Sign in with Google and copy your API key from the
+                                dashboard</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="flex-shrink-0 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            2</div>
+                        <div>
+                            <h3 class="font-semibold text-white">Add Service Worker</h3>
+                            <p class="text-sm text-slate-400">Create a service worker to handle push notifications</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3">
+                        <div
+                            class="flex-shrink-0 w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                            3</div>
+                        <div>
+                            <h3 class="font-semibold text-white">Subscribe & Schedule</h3>
+                            <p class="text-sm text-slate-400">Get user's push subscription and send it to PushTime API
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 1: Service Worker -->
+            <div class="glass-panel rounded-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Step 1: Create Service Worker</h2>
+                <p class="text-slate-400 mb-4">Create a file called <code
+                        class="bg-slate-800 px-2 py-1 rounded text-indigo-400">sw.js</code> in your public folder:</p>
+
+                <div class="bg-[#1e1e1e] rounded-lg overflow-hidden border border-slate-700">
+                    <div class="flex items-center gap-2 px-4 py-3 bg-[#252526] border-b border-[#333]">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-2 text-slate-500 text-sm">sw.js</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code class="text-slate-300">self.addEventListener('push', function(event) {
+    let data = {};
+    if (event.data) {
+        try {
+            data = event.data.json();
+        } catch(e) {
+            data = { title: 'Notification', body: event.data.text() };
+        }
+    }
+
+    const title = data.title || 'Reminder';
+    const options = {
+        body: data.body || 'Your notification',
+        icon: '/icon.png',
+        badge: '/badge.png'
+    };
+
+    event.waitUntil(
+        self.registration.showNotification(title, options)
+    );
+});
+
+self.addEventListener('fetch', (event) => {
+    event.respondWith(fetch(event.request));
+});</code></pre>
+                </div>
+            </div>
+
+            <!-- Step 2: Get Subscription -->
+            <div class="glass-panel rounded-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Step 2: Get Push Subscription</h2>
+                <p class="text-slate-400 mb-4">Add this JavaScript to your page:</p>
+
+                <div class="bg-[#1e1e1e] rounded-lg overflow-hidden border border-slate-700">
+                    <div class="flex items-center gap-2 px-4 py-3 bg-[#252526] border-b border-[#333]">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-2 text-slate-500 text-sm">app.js</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code class="text-slate-300">const VAPID_PUBLIC_KEY = 'BICNyZg28DzeGJ5NXZA2GKkspxj-ZGEXq6hBzPcjZBeT1xTNb8GR-Yz4jwPOfeYRYKE-CSK6Ds191QFrF4cqxDY';
+
+async function subscribeToPush() {
+    // Request permission
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+        console.log('Permission denied');
+        return null;
+    }
+
+    // Register service worker
+    const registration = await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.ready;
+
+    // Subscribe to push (modern browsers accept VAPID key as string)
+    const subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: VAPID_PUBLIC_KEY
+    });
+
+    return subscription;
+}</code></pre>
+                </div>
+            </div>
+
+            <!-- Step 3: Send to PushTime -->
+            <div class="glass-panel rounded-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Step 3: Schedule Notification</h2>
+                <p class="text-slate-400 mb-4">Send the subscription to PushTime API:</p>
+
+                <div class="bg-[#1e1e1e] rounded-lg overflow-hidden border border-slate-700">
+                    <div class="flex items-center gap-2 px-4 py-3 bg-[#252526] border-b border-[#333]">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-2 text-slate-500 text-sm">schedule.js</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code class="text-slate-300" id="scheduleCode">async function scheduleNotification(subscription, message, scheduledTime) {
+    const BACKEND_URL = 'YOUR_BACKEND_URL_HERE';
+    const API_KEY = 'YOUR_API_KEY_HERE';  // Get from dashboard after signing in
+
+    const response = await fetch(`${BACKEND_URL}/api/send?key=${API_KEY}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            sub: subscription,
+            message: message,
+            scheduled_time: scheduledTime  // ISO 8601 format or null for immediate
+        })
+    });
+
+    const result = await response.json();
+    return result;
+}
+
+// Example usage:
+const subscription = await subscribeToPush();
+
+// Send immediately (no API key needed for instant send)
+await scheduleNotification(subscription, 'Hello!', null);
+
+// Or schedule for later (API key required)
+const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
+await scheduleNotification(
+    subscription,
+    'Reminder: Check your tasks!',
+    tomorrow.toISOString()
+);</code></pre>
+                </div>
+            </div>
+
+            <!-- Complete Example -->
+            <div class="glass-panel rounded-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Complete Example</h2>
+                <p class="text-slate-400 mb-4">Here's a complete working example:</p>
+
+                <div class="bg-orange-500/10 border border-orange-500/20 rounded-lg p-4 mb-4">
+                    <p class="text-orange-200 text-sm">
+                        <svg class="w-4 h-4 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                            </path>
+                        </svg>
+                        <strong>Important:</strong> This example requires the service worker file from Step 1. Make sure
+                        you have <code class="bg-slate-800 px-2 py-0.5 rounded text-indigo-300">sw.js</code> in the same
+                        directory, otherwise it won't work.
+                    </p>
+                </div>
+
+                <div class="bg-[#1e1e1e] rounded-lg overflow-hidden border border-slate-700">
+                    <div class="flex items-center gap-2 px-4 py-3 bg-[#252526] border-b border-[#333]">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-2 text-slate-500 text-sm">index.html</span>
+                    </div>
+                    <pre class="p-4 text-sm overflow-x-auto"><code class="text-slate-300" id="completeExample">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+    &lt;button id="enableBtn"&gt;Enable Notifications&lt;/button&gt;
+    &lt;button id="scheduleBtn" disabled&gt;Schedule for 1 Minute&lt;/button&gt;
+
+    &lt;script&gt;
+        const BACKEND_URL = 'YOUR_BACKEND_URL_HERE';
+        const VAPID_KEY = 'BICNyZg28DzeGJ5NXZA2GKkspxj-ZGEXq6hBzPcjZBeT1xTNb8GR-Yz4jwPOfeYRYKE-CSK6Ds191QFrF4cqxDY';
+        let subscription = null;
+
+        document.getElementById('enableBtn').addEventListener('click', async () => {
+            const permission = await Notification.requestPermission();
+            if (permission !== 'granted') return;
+
+            const registration = await navigator.serviceWorker.register('/sw.js');
+            await navigator.serviceWorker.ready;
+
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: VAPID_KEY
+            });
+
+            document.getElementById('scheduleBtn').disabled = false;
+            alert('Notifications enabled!');
+        });
+
+        document.getElementById('scheduleBtn').addEventListener('click', async () => {
+            const oneMinute = new Date(Date.now() + 60 * 1000).toISOString();
+            const API_KEY = 'YOUR_API_KEY_HERE';  // Get from dashboard
+
+            const response = await fetch(`${BACKEND_URL}/api/send?key=${API_KEY}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    sub: subscription,
+                    message: 'Test notification from PushTime!',
+                    scheduled_time: oneMinute
+                })
+            });
+
+            const result = await response.json();
+            alert(result.scheduled ? 'Scheduled!' : 'Sent!');
+        });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+                </div>
+            </div>
+
+            <!-- API Reference -->
+            <div class="glass-panel rounded-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">API Reference</h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-400 mb-2">Endpoint</h3>
+                        <code
+                            class="block p-3 bg-slate-900 border border-slate-700 rounded text-green-400 text-sm break-all"
+                            id="apiEndpoint">POST YOUR_BACKEND_URL_HERE/api/send?key=YOUR_API_KEY</code>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-400 mb-2">Authentication</h3>
+                        <div class="bg-slate-900 border border-slate-700 rounded p-3 text-sm">
+                            <div class="text-slate-300 mb-2"><strong class="text-indigo-400">API Key (Query Parameter):</strong> Required for scheduled notifications</div>
+                            <div class="text-slate-400 text-xs mt-3">Sign in with Google to get your API key from the
+                                dashboard, then pass it as <code class="text-indigo-400">?key=YOUR_API_KEY</code></div>
+                            <div class="text-slate-500 text-xs mt-2">Note: Immediate sends (no scheduled_time) don't
+                                require authentication</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-400 mb-2">Headers</h3>
+                        <div class="bg-slate-900 border border-slate-700 rounded p-3 text-sm">
+                            <div class="text-slate-300"><span class="text-purple-400">Content-Type:</span>
+                                application/json</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-400 mb-2">Request Body</h3>
+                        <div class="bg-slate-900 border border-slate-700 rounded p-3 text-sm text-slate-300">
+                            <div><span class="text-purple-400">sub</span> (required): Push subscription object from
+                                browser</div>
+                            <div><span class="text-purple-400">message</span> (required): Notification message text
+                            </div>
+                            <div><span class="text-purple-400">scheduled_time</span> (optional): ISO 8601 timestamp.
+                                Omit for immediate send</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 class="text-lg font-semibold text-indigo-400 mb-2">Response</h3>
+                        <div class="bg-slate-900 border border-slate-700 rounded p-3 text-sm">
+                            <pre class="text-green-400">{
+  "success": true,
+  "scheduled": true,  // or false if sent immediately
+  "id": 123
+}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Troubleshooting -->
+            <div class="glass-panel rounded-xl p-8 mb-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Troubleshooting</h2>
+
+                <div class="space-y-4 text-slate-300">
+                    <div>
+                        <h3 class="font-semibold text-white mb-1">"Permission denied"</h3>
+                        <p class="text-sm text-slate-400">User blocked notifications. They need to reset permissions in
+                            browser settings.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-white mb-1">"Service Worker registration failed"</h3>
+                        <p class="text-sm text-slate-400">Make sure you're using HTTPS or localhost. Service workers
+                            don't work on HTTP.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-white mb-1">"Authentication required"</h3>
+                        <p class="text-sm text-slate-400">You need to be logged in via Google OAuth to schedule
+                            notifications. Visit /auth/google_oauth2 on your backend.</p>
+                    </div>
+
+                    <div>
+                        <h3 class="font-semibold text-white mb-1">Notifications not appearing</h3>
+                        <p class="text-sm text-slate-400">Check browser console for errors. Ensure notifications are
+                            enabled in system settings.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="text-center glass-panel rounded-xl p-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Ready to Start?</h2>
+                <p class="text-slate-400 mb-6">Get your free API key and start scheduling notifications</p>
+                <div class="flex gap-4 justify-center flex-wrap">
+                    <a href="/"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-lg font-bold transition-all">Try
+                        Live Demo</a>
+                    <a href="/#/dashboard" id="dashboardLink"
+                        class="bg-slate-700 hover:bg-slate-600 text-white px-6 py-3 rounded-lg font-bold transition-all">Get
+                        API Key</a>
+                    <button onclick="openCrispChat()"
+                        class="bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-lg font-bold transition-all border border-slate-600 inline-flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z">
+                            </path>
+                        </svg>
+                        Chat with Support
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Static docs - no personalization needed
+        // Users should replace YOUR_API_KEY_HERE and YOUR_BACKEND_URL_HERE with their actual values
+    </script>
+
+    <!-- Crisp Chat -->
+    <script type="text/javascript">
+        window.$crisp = [];
+        window.CRISP_WEBSITE_ID = "bd841072-e99c-4dc5-b4dc-f78996435cb6";
+        (function () {
+            d = document;
+            s = d.createElement("script");
+            s.src = "https://client.crisp.chat/l.js";
+            s.async = 1;
+            d.getElementsByTagName("head")[0].appendChild(s);
+        })();
+    </script>
+</body>
+
+</html>
